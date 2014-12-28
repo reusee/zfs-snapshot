@@ -17,8 +17,8 @@ var (
 		Freq time.Duration
 	}{
 		{time.Hour * 24 * 30, time.Hour * 24},
-		{time.Hour * 24 * 14, time.Hour * 6},
-		{time.Hour * 24 * 7, time.Hour},
+		{time.Hour * 24 * 20, time.Hour * 6},
+		{time.Hour * 24 * 10, time.Hour},
 		{0, time.Minute},
 	}
 )
