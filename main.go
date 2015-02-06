@@ -16,9 +16,10 @@ var (
 		Age  time.Duration
 		Freq time.Duration
 	}{
-		{time.Hour * 24 * 30, time.Hour * 24},
-		{time.Hour * 24 * 20, time.Hour * 6},
-		{time.Hour * 24 * 10, time.Hour},
+		{time.Hour * 24 * 32, time.Hour * 81},
+		{time.Hour * 24 * 24, time.Hour * 27},
+		{time.Hour * 24 * 16, time.Hour * 9},
+		{time.Hour * 24 * 8, time.Hour * 3},
 		{0, time.Minute},
 	}
 )
@@ -30,36 +31,38 @@ func process(name string) {
 		name, now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second()))
 
 	// delete unchanged
-	out := run("zfs", "list", "-d", "1", "-t", "snapshot", "-H", "-o", "name,used", "-p", name)
-	lines := strings.Split(out, "\n")
-	var toDel []string
-	for i := 1; i < len(lines); i++ {
-		line := strings.TrimSpace(lines[i])
-		if len(line) == 0 {
-			break
+	/*
+		out := run("zfs", "list", "-d", "1", "-t", "snapshot", "-H", "-o", "name,used", "-p", name)
+		lines := strings.Split(out, "\n")
+		var toDel []string
+		for i := 1; i < len(lines); i++ {
+			line := strings.TrimSpace(lines[i])
+			if len(line) == 0 {
+				break
+			}
+			parts := strings.SplitN(line, "\t", 2)
+			if parts[1] != "0" {
+				continue
+			}
+			lastLine := strings.TrimSpace(lines[i-1])
+			lastParts := strings.SplitN(lastLine, "\t", 2)
+			out = run("zfs", "diff", lastParts[0], parts[0])
+			if len(out) > 0 {
+				continue
+			}
+			toDel = append(toDel, parts[0])
 		}
-		parts := strings.SplitN(line, "\t", 2)
-		if parts[1] != "0" {
-			continue
+		for _, snapshot := range toDel {
+			if len(snapshot) == 0 {
+				continue
+			}
+			pt("delete %s\n", snapshot)
+			run("zfs", "destroy", snapshot)
 		}
-		lastLine := strings.TrimSpace(lines[i-1])
-		lastParts := strings.SplitN(lastLine, "\t", 2)
-		out = run("zfs", "diff", lastParts[0], parts[0])
-		if len(out) > 0 {
-			continue
-		}
-		toDel = append(toDel, parts[0])
-	}
-	for _, snapshot := range toDel {
-		if len(snapshot) == 0 {
-			continue
-		}
-		pt("delete %s\n", snapshot)
-		run("zfs", "destroy", snapshot)
-	}
+	*/
 
 	// group and delete old snapshots
-	out = run("zfs", "list", "-d", "1", "-t", "snapshot", "-H", "-o", "name", "-p", name)
+	out := run("zfs", "list", "-d", "1", "-t", "snapshot", "-H", "-o", "name", "-p", name)
 	groups := make(map[time.Duration][]string)
 	for _, snapshot := range strings.Split(out, "\n") {
 		snapshot := strings.TrimSpace(snapshot)
