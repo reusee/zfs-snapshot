@@ -1,8 +1,11 @@
 package main
 
 import (
+	crand "crypto/rand"
+	"encoding/binary"
 	"fmt"
 	"log"
+	"math/rand"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -24,42 +27,21 @@ var (
 	}
 )
 
+func init() {
+	var seed int64
+	binary.Read(crand.Reader, binary.LittleEndian, &seed)
+	rand.Seed(seed)
+}
+
 func process(name string) {
 	// take snapshot
 	now := time.Now()
 	run("zfs", "snapshot", fmt.Sprintf("%s@autosnap-%04d-%02d-%02d-%02d-%02d-%02d",
 		name, now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second()))
 
-	// delete unchanged
-	/*
-		out := run("zfs", "list", "-d", "1", "-t", "snapshot", "-H", "-o", "name,used", "-p", name)
-		lines := strings.Split(out, "\n")
-		var toDel []string
-		for i := 1; i < len(lines); i++ {
-			line := strings.TrimSpace(lines[i])
-			if len(line) == 0 {
-				break
-			}
-			parts := strings.SplitN(line, "\t", 2)
-			if parts[1] != "0" {
-				continue
-			}
-			lastLine := strings.TrimSpace(lines[i-1])
-			lastParts := strings.SplitN(lastLine, "\t", 2)
-			out = run("zfs", "diff", lastParts[0], parts[0])
-			if len(out) > 0 {
-				continue
-			}
-			toDel = append(toDel, parts[0])
-		}
-		for _, snapshot := range toDel {
-			if len(snapshot) == 0 {
-				continue
-			}
-			pt("delete %s\n", snapshot)
-			run("zfs", "destroy", snapshot)
-		}
-	*/
+	if rand.Intn(300) != 0 {
+		return
+	}
 
 	// group and delete old snapshots
 	out := run("zfs", "list", "-d", "1", "-t", "snapshot", "-H", "-o", "name", "-p", name)
@@ -104,6 +86,10 @@ func process(name string) {
 }
 
 func main() {
+	t0 := time.Now()
+	defer func() {
+		pt("done in %v\n", time.Now().Sub(t0))
+	}()
 	// get pools
 	out := run("zpool", "list", "-H", "-o", "name")
 	for _, name := range strings.Split(out, "\n") {
