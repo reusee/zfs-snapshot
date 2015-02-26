@@ -39,7 +39,7 @@ func process(name string) {
 	run("zfs", "snapshot", fmt.Sprintf("%s@autosnap-%04d-%02d-%02d-%02d-%02d-%02d",
 		name, now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second()))
 
-	if rand.Intn(300) != 0 {
+	if rand.Intn(100) != 0 {
 		return
 	}
 
